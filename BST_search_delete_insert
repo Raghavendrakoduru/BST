@@ -1,0 +1,141 @@
+#include <iostream>
+#include <memory>
+
+// Define the structure for a tree node
+struct Node {
+    int val;
+    std::unique_ptr<Node> left, right;
+
+    Node(int val) : val(val), left(nullptr), right(nullptr) {}
+};
+
+// Binary Search Tree class
+class BinarySearchTree {
+public:
+    BinarySearchTree() : root(nullptr) {}
+
+    // Insert a value into the tree
+    void insert(int val) {
+        root = insertRecursive(std::move(root), val);
+    }
+
+    // Search for a value in the tree
+    bool search(int val) const {
+        return searchRecursive(root, val);
+    }
+
+    // Delete a value from the tree
+    void deleteNode(int val) {
+        root = deleteNodeRecursive(std::move(root), val);
+    }
+
+    // Print the inorder traversal of the tree
+    void inorder() const {
+        inorderRecursive(root);
+    }
+
+private:
+    // Recursive helper function for insertion
+    std::unique_ptr<Node> insertRecursive(std::unique_ptr<Node> node, int val) {
+        if (!node) {
+            return std::make_unique<Node>(val);
+        }
+        if (val < node->val) {
+            node->left = insertRecursive(std::move(node->left), val);
+        } else if (val > node->val) {
+            node->right = insertRecursive(std::move(node->right), val);
+        }
+        return node;
+    }
+
+    // Recursive helper function for search
+    bool searchRecursive(const std::unique_ptr<Node>& node, int val) const {
+        if (!node) {
+            return false;
+        }
+        if (val == node->val) {
+            return true;
+        } else if (val < node->val) {
+            return searchRecursive(node->left, val);
+        } else {
+            return searchRecursive(node->right, val);
+        }
+    }
+
+    // Recursive helper function for deletion
+    std::unique_ptr<Node> deleteNodeRecursive(std::unique_ptr<Node> node, int val) {
+        if (!node) {
+            return nullptr;
+        }
+        if (val < node->val) {
+            node->left = deleteNodeRecursive(std::move(node->left), val);
+        } else if (val > node->val) {
+            node->right = deleteNodeRecursive(std::move(node->right), val);
+        } else {
+            // Node with only one child or no child
+            if (!node->left) {
+                return std::move(node->right);
+            } else if (!node->right) {
+                return std::move(node->left);
+            }
+            // Node with two children: Get the inorder successor
+            Node* successor = getMin(node->right.get());
+            node->val = successor->val; // Copy the inorder successor's value
+            node->right = deleteNodeRecursive(std::move(node->right), successor->val); // Delete the inorder successor
+        }
+        return node;
+    }
+
+    // Function to get the minimum value node in a subtree
+    Node* getMin(Node* node) {
+        while (node && node->left) {
+            node = node->left.get();
+        }
+        return node;
+    }
+
+    // Recursive helper function for inorder traversal
+    void inorderRecursive(const std::unique_ptr<Node>& node) const {
+        if (node) {
+            inorderRecursive(node->left);
+            std::cout << node->val << " ";
+            inorderRecursive(node->right);
+        }
+    }
+
+    std::unique_ptr<Node> root;
+};
+
+int main() {
+    BinarySearchTree bst;
+
+    // Insert values into the tree
+    bst.insert(5);
+    bst.insert(2);
+    bst.insert(8);
+    bst.insert(3);
+    bst.insert(9);
+
+    // Print the inorder traversal
+    std::cout << "Inorder traversal: ";
+    bst.inorder();
+    std::cout << std::endl;
+
+    // Search for a value
+    int search_val = 8;
+    if (bst.search(search_val)) {
+        std::cout << "Found " << search_val << " in the tree." << std::endl;
+    } else {
+        std::cout << "Did not find " << search_val << " in the tree." << std::endl;
+    }
+
+    // Delete a value
+    bst.deleteNode(8);
+
+    // Print the inorder traversal again
+    std::cout << "Inorder traversal after deletion: ";
+    bst.inorder();
+    std::cout << std::endl;
+
+    return 0;
+}
